@@ -46,7 +46,7 @@ while curr_page_num < last_page_num:
 		curr_page_num = int(curr_page.contents[0])
 
 		pages = soup.select(".custom-wp-pagination.cf a")
-		
+
 		for page in pages:
 			next_page = page.get("href")
 			next_page_num = page.contents[0]
