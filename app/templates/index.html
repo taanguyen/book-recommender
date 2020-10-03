@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1> Book Blender </h1>
+    <h3> Compile a list of books recommended by your favorite leaders </h3> <br>
+    <form action="" method="post" novalidate>
+    <p>{{ form.leaders(size=100) }}</p>
+    <p>{{ form.submit() }}</p>
+    </form>
+    <a href="/results">Results</a>
+
+{% endblock %}
