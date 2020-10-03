@@ -4,7 +4,7 @@ from book import Book
 
 class Scraper:
 	# URL for The CEO Library
-	base_url = f"https://www.theceolibrary.com/books-recommended-by/" 
+	base_url = "https://www.theceolibrary.com/books-recommended-by/" 
 	home = "http://www.theceolibrary.com"
 	
 	def __init__(self, leader: str):
