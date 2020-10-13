@@ -1,25 +1,71 @@
 # scraper.py Collects book recommendations from The CEO Library
 import requests, sys, webbrowser, bs4
 from book import Book
+import concurrent.futures 
+import time
+import threading
+from collections import Counter
+
 
 class Scraper:
 	# URL for The CEO Library
 	base_url = "https://www.theceolibrary.com/books-recommended-by/" 
 	home = "http://www.theceolibrary.com"
-	
-	def __init__(self, leader: str):
-		self.leader = leader
-		self.books = self.scrapeBooks()
-	
-	def scrapeBooks(self):
-		books = []
-		formattedLeader = self.leader.replace(" ", "-")
-		url = f"{self.base_url}{formattedLeader}"
+	lock = threading.Lock()
+
+	@staticmethod
+	def bookFromUrl(url):
+		try:
+			# Request data from CEO Library
+			# set headers
+			headers = {
+				"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36"
+			}	
+			req = requests.get(url, headers=headers)  
+			req.raise_for_status()
+			soup = bs4.BeautifulSoup(req.text, "html.parser") 
+			
+			# get cover
+			cover_url = getCoverUrl(soup, 'book-cover-actions')			
+			# get title
+			title = getTitle(soup, "book-info-intro")
+			# get authors
+			authors = getAuthors(soup, "book-info-intro")
+			# get book info
+			info = getInfo(soup, "amazon-book-description")
+			# get isbn and rating
+			isbn, rating = getISBNRating(soup, "buy-book")			
+			book = Book(title, authors, info, cover_url, isbn, rating)
+			return book
+
+		except Exception as e: 
+			print(e) 
+	@staticmethod
+	def booksWithFreq(leaders):
+		# get unique book urls with frequency -- multithreading
+		bookUrlsWithFreq = Scraper.bookUrlsWithFreq(leaders)
+		with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+			books = executor.map(Scraper.bookFromUrl, bookUrlsWithFreq.keys())
+		bookObjectsWithFreq = list(zip(books, bookUrlsWithFreq.values()))
+		return bookObjectsWithFreq
+		# books = []
+		# bookUrlsWithFreq = Scraper.bookUrlsWithFreq(leaders)
+		# for url,freq in bookUrlsWithFreq:
+		# 	book = Scraper.bookFromUrl(url)
+		# 	books.append((book, freq))
+		# return books
+	# input: leader name in format "firstname lastname"
+	@staticmethod
+	def scrapeBookUrlsForLeader(leader):
+		bookUrls = set()
+		formattedLeader = leader.replace(" ", "-")
+		base_url_with_leader = f"{Scraper.base_url}{formattedLeader}"
+		url = base_url_with_leader
 
 		curr_page_num = 0
-		last_page_num = 1 
-
-		while curr_page_num < last_page_num:
+		next_page_num = 1 
+		
+		while curr_page_num < next_page_num:
 			try:
 				# Request data from CEO Library	
 				req = requests.get(url)  
@@ -28,44 +74,19 @@ class Scraper:
 
 				entries = soup.select(".fcl-entry")
 				for entry in entries:
-					# get cover
-					cover_container = entry.find("div", class_="book-cover")
-					cover_url = self.home + cover_container['data-bgset']
-					
-					# get title
-					title_container = entry.find("h2", class_= "book-title")
-					title = title_container.a.string
-					
-					# get authors
-					authors = []
-					author_container = entry.find("p", class_ = "book-info")
-					author_links = author_container.find_all("a")
-					for author_link in author_links:
-						authors.append(author_link.string)
-					
-					# scrape profile and BookDepository for info, isbn, rating
+					# scrape for book url
+					cover_container = entry.find("div", class_="book-cover")					
 					book_profile = cover_container.find('a')['href']
-					book_profile_url = self.home + book_profile
-					profile_req = requests.get(book_profile_url)
-					profile_req.raise_for_status()
-					profile_soup = bs4.BeautifulSoup(profile_req.text, 'html.parser')
-
-					buy_container = profile_soup.find("div", class_ = "buy-book")
-					bookdep_url = buy_container.find(id="aff-book-depository")['href']
-					isbn, rating = scrapeBookVendor(bookdep_url)
-
-					info_container = profile_soup.find("div", class_ = "amazon-book-description")
-					info = info_container.find_all("p")
-					
-					book = Book(isbn, title, authors, cover_url, info, rating)
-					books.append(book)
-					
-				# Fetch next page 
-				curr_page = soup.select(".custom-wp-pagination.cf span")[0]
+					book_profile_url = Scraper.home + book_profile
+					bookUrls.add(book_profile_url)
+				
+				# Fetch curr and next pages
+				curr_pages_span = soup.select(".custom-wp-pagination.cf span")
+				if not curr_pages_span: break
+				curr_page = curr_pages_span[0]
 				curr_page_num = int(curr_page.string)
-
 				pages = soup.select(".custom-wp-pagination.cf a")
-
+				
 				for page in pages:
 					next_page = page.get("href")
 					next_page_num = page.string
@@ -74,14 +95,32 @@ class Scraper:
 						next_page_num = int(next_page_num)
 						if next_page_num > curr_page_num:
 							# get url for scraping next page of recommendations
-							url = self.base_url + next_page
-							last_page_num = next_page_num
+							url = base_url_with_leader + next_page
 							break
 			except Exception as e: 
 				print(e)
-						
-		#print_books(books)
-		return books
+		return bookUrls
+	# input: names of leaders in a list 
+	@staticmethod
+	def bookUrlsWithFreq(leaders):
+		uniqueBookUrls = Counter()
+		with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+			bookUrls = executor.map(Scraper.scrapeBookUrlsForLeader, leaders)	
+			with Scraper.lock: 
+				for bookUrl in bookUrls:
+					uniqueBookUrls.update(bookUrl)
+		uniqueUrls = list(uniqueBookUrls.items())
+		uniqueUrls.sort(key=lambda x: x[1])
+		return uniqueBookUrls
+
+		# uniqueBookUrls = {}
+		# for leader in leaders:
+		# 	bookUrls = Scraper.scrapeBookUrlsForLeader(leader)
+		# 	for bookUrl in bookUrls:
+		# 		if bookUrl not in uniqueBookUrls:
+		# 			uniqueBookUrls[bookUrl] = 0
+		# 		uniqueBookUrls[bookUrl] += 1 
+		# return uniqueBookUrls
 
 def is_int(s):
 	try: 
@@ -94,11 +133,52 @@ def print_books(books):
 	for book in books:
 		print(book)
 
-def scrapeBookVendor(url):
-    req = requests.get(url)
-    req.raise_for_status()
-    soup = bs4.BeautifulSoup(req.text, "html.parser")
-    rating = float(soup.find(itemprop="ratingValue").string)
-    isbn = soup.find(itemprop="isbn").string
-    return (isbn, rating)
+def getCoverUrl(soup, class_):
+	cover_div = soup.find("div", class_= class_)
+	cover = cover_div.img['src']
+	cover_url = Scraper.home + cover 
+	return cover_url
 
+def getTitle(soup, class_):
+	title_div = soup.find("div", class_= class_)
+	title = title_div.h1.a.string
+	return title
+
+def getAuthors(soup, class_):
+	authors = []
+	author_div = soup.find("div", class_= class_).find('p')
+	author_links = author_div.find_all("a")
+	for author_link in author_links:
+		authors.append(author_link.string)
+	return authors
+
+def getInfo(soup, class_):
+	info_container = soup.find("div", class_ = class_)
+	info = info_container.find_all("p")
+	return info 
+
+def getISBNRating(soup, class_):
+	buy_div = soup.find("div", class_ = class_)
+	bookdep_url = buy_div.find(id="aff-book-depository")['href']
+	isbn, rating = scrapeBookVendor(bookdep_url)
+	return isbn, rating
+
+def scrapeBookVendor(url):
+	try:
+		time.sleep(1.0)
+		req = requests.get(url)
+		req.raise_for_status()
+		soup = bs4.BeautifulSoup(req.text, "html.parser")
+		rating = float(soup.find(itemprop="ratingValue").string)
+		isbn = soup.find(itemprop="isbn").string
+		return (isbn, rating)
+	except Exception as e:
+		print(e)
+
+if __name__ == "__main__":
+	leaders = ["james altucher"]
+	start_time = time.time()
+	bf = Scraper.booksWithFreq(leaders)
+	duration = time.time() - start_time
+	print(bf)
+	print(f"Downloaded {len([(item, f) for item, f in bf if item])} in {duration} seconds")
