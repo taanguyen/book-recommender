@@ -1,6 +1,7 @@
-from wtforms import Form, StringField, SubmitField
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 
-class InputLeadersForm(Form):
-    leaders = StringField('Leaders', validators=[DataRequired()])
-    submit = SubmitField('Submit')
+class InputLeadersForm(FlaskForm):
+    leaders = StringField('Leaders', validators=[DataRequired()],  \
+        render_kw={"placeholder": "bill gates; brene brown;"})
