@@ -1,6 +1,7 @@
 # scraper.py Collects book recommendations from The CEO Library
-import requests, sys, webbrowser, bs4
+import requests, sys, webbrowser, bs4, xmltodict, json
 from book import Book
+from config import Config
 import concurrent.futures 
 import time
 import threading
@@ -31,15 +32,16 @@ class Scraper:
 			title = getTitle(soup, "book-info-intro")
 			# get authors
 			authors = getAuthors(soup, "book-info-intro")
-			# get book info
-			info = getInfo(soup, "amazon-book-description")
 			# get isbn and rating
-			isbn, rating = getISBNRating(soup, "buy-book")			
-			book = Book(title, authors, info, cover_url, isbn, rating)
+			#isbn, rating = getISBNRating(soup, "buy-book")	
+			rating = goodReadsSearchBook(title, authors[0])
+			info = getInfo(soup, "amazon-book-description")
+			book = Book(title, authors, info, cover_url, "NA", rating)
 			return book
 
 		except Exception as e: 
 			print(e) 
+			
 	@staticmethod
 	def booksWithFreq(leaders):
 		# get unique book urls with frequency -- multithreading
@@ -61,7 +63,7 @@ class Scraper:
 		formattedLeader = leader.replace(" ", "-")
 		base_url_with_leader = f"{Scraper.base_url}{formattedLeader}"
 		url = base_url_with_leader
-
+		
 		curr_page_num = 0
 		next_page_num = 1 
 		
@@ -99,6 +101,7 @@ class Scraper:
 							break
 			except Exception as e: 
 				print(e)
+				continue
 		return bookUrls
 	# input: names of leaders in a list 
 	@staticmethod
@@ -155,7 +158,15 @@ def getAuthors(soup, class_):
 def getInfo(soup, class_):
 	info_container = soup.find("div", class_ = class_)
 	info = info_container.find_all("p")
-	return info 
+	unique_paras = []
+	# remove duplicate paragraphs
+	for i in range(len(info)):
+		print(info[i].text)
+		if i > 0:
+			if info[i].text == info[i-1].text:
+				continue
+		unique_paras.append(info[i])
+	return unique_paras
 
 def getISBNRating(soup, class_):
 	buy_div = soup.find("div", class_ = class_)
@@ -174,6 +185,19 @@ def scrapeBookVendor(url):
 		return (isbn, rating)
 	except Exception as e:
 		print(e)
+
+def goodReadsSearchBook(title, author):
+	endpoint = 'https://www.goodreads.com/book/title.xml'
+	params = {'format': 'xml', 'key': Config.API_KEY, \
+		'title': f"{title}", \
+		'author':f"{author}"}
+	req = requests.get(endpoint, params=params)
+	time.sleep(1)
+	data_dict = xmltodict.parse(req.content)
+	gr = data_dict['GoodreadsResponse']
+	rating = gr['book']['average_rating']
+	return rating
+	#print(g['book']['average_rating'])
 
 if __name__ == "__main__":
 	leaders = ["james altucher"]
