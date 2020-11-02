@@ -1,12 +1,17 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1> Book Blender </h1>
-    <h3> Compile a list of books recommended by your favorite leaders </h3> <br>
-    <form action="" method="post" novalidate>
-    <p>{{ form.leaders(size=100) }}</p>
-    <p>{{ form.submit() }}</p>
-    </form>
-    <a href="/results">Results</a>
+
+<div class="home">
+    <h1>Book Blender</h1> 
+</div>  
+<h2>Compile a list of books recommended by your favorite leaders</h2>
+<form action="#" method="post" novalidate>  
+    {{ form.hidden_tag() }}
+    <div class="wrapper">
+        {{ form.leaders(size=100) }}
+        <button class="search__button">GO</button>
+    </div>
+</form>  
 
 {% endblock %}

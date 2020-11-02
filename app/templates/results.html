@@ -2,7 +2,25 @@
 
 {% block content %}
     <form action="" method="post" novalidate>
-    <p>{{ form.leaders(size=100) }}</p>
-    <p>{{ form.submit() }}</p>
+        <div class="wrapper">
+            {{ form.leaders(size=100) }}
+            <button class="search__button">GO</button>
+        </div>
     </form>
+    
+    {%  for book in books %}
+    {% if book %}
+    <div class="accordion">
+        <button type="button" class = "accordion__button">{{ book.title }} 
+        <br><i><span style="font-size: 0.9rem;">{{  book.authors[0] }}</span></i></button>
+            <div class="accordion__content">
+                <p>
+                    {{ book.info | safe}}
+                </p>
+            </div>
+    </div>
+    {% endif %}
+    {%  endfor %}
+ 
+    <script src="{{url_for('static', filename='results.js')}}"></script>
 {%  endblock %}
