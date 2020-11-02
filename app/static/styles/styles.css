@@ -1,0 +1,125 @@
+body {
+    background-color: #393B44;
+    font-family: 'Roboto', sans-serif;
+    text-align: center;
+}
+h1{
+    font-style: normal;
+    font-weight: bold;
+    font-size: 72px;
+    text-align: center;
+
+    color: #F1F3F8;
+}
+
+h2{
+    margin: 10px auto;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 30px;
+
+    color: #F1F3F8;
+}
+
+.wrapper {
+    display:inline-block;
+    position: relative;
+}
+
+input{
+    width: 440px;
+    height: 50px;
+    background: #D6E0F0;
+    border: 0;
+    padding: 0px 10px;
+    border-radius: 10px 0px 0px 10px;
+    margin-top: 30px;
+    margin-right: 70px;
+    margin-bottom: 50px;
+    line-height: 25px;
+}
+
+input::placeholder{
+    font-family: 'Roboto', 'sans-serif';
+    font-size: 25px;
+    transform: translateY(5px);
+}
+
+.search__button{
+    position:absolute;
+    right:0;
+    top:0;
+    width: 70px;
+    height: 50px;
+    padding: 0;
+    margin-top: 30px;
+
+    background: #8D93AB;
+    border: 0;
+    border-radius: 0px 10px 10px 0px;
+
+    font-family: 'Roboto', 'sans-serif';
+    font-size: 25px;
+}
+
+.home{
+    background-color: black;
+    width: 500px;
+    height: 90px;
+    position: relative;
+    margin: 100px auto 50px;
+}
+
+.accordion__button{
+    display: block;
+    font-family: 'Roboto', 'sans-serif';
+    font-size: 1.2rem;
+    font-weight: 300;
+    width: 65%;
+    box-sizing: content-box;
+    padding: 15px;
+    border: none;
+    outline: none;
+    color: #000000;
+    text-align: center;
+    word-wrap: break-word;
+    transition: background 0.2s;
+    position: relative;
+    margin: auto;
+}
+
+.accordion__button::after{
+    content: '\25be';
+    float: right;
+    transform: scale(1.5);
+}
+
+.accordion__button--active + .accordion__content { display: block;}
+.accordion__button--active::after{content: '\25b4';}
+
+.accordion__content{
+    padding: 0 15px;
+    width: 65%;
+ 
+    display: none;
+    overflow: auto;
+    position: relative;
+    text-align: left;
+    margin: auto;    
+}
+
+.accordion__button:nth-child(even){
+    background-color: #f1f3f8;
+}
+
+.accordion:nth-child(even) .accordion__content{
+    background-color: #d6e0f0;
+}
+
+.accordion__button:nth-child(odd){
+    background-color: #d6e0f0;
+}
+
+.accordion:nth-child(odd) .accordion__content{
+    background-color: #f1f3f8;
+}
