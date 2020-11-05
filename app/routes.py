@@ -18,7 +18,7 @@ def index():
 def results(leaders):
     form = InputLeadersForm()
     if request.method == 'POST':
-        return redirect(url_for('index'))
+        return redirect(url_for('results', leaders = form.leaders.data))
     else:
         if leaders:
             names = leaders.split(";")
