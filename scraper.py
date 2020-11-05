@@ -1,12 +1,11 @@
 # scraper.py Collects book recommendations from The CEO Library
-import requests, sys, webbrowser, bs4, xmltodict, json
+import requests, sys, webbrowser, bs4, xmltodict, json, re
 from book import Book
 from config import Config
 import concurrent.futures 
 import time
 import threading
 from collections import Counter
-
 
 class Scraper:
 	# URL for The CEO Library
@@ -25,7 +24,6 @@ class Scraper:
 			req = requests.get(url, headers=headers)  
 			req.raise_for_status()
 			soup = bs4.BeautifulSoup(req.text, "html.parser") 
-			
 			# get cover
 			cover_url = getCoverUrl(soup, 'book-cover-actions')			
 			# get title
@@ -34,7 +32,7 @@ class Scraper:
 			authors = getAuthors(soup, "book-info-intro")
 			# get isbn and rating
 			#isbn, rating = getISBNRating(soup, "buy-book")	
-			rating = goodReadsSearchBook(title, authors[0])
+			rating = goodReadsSearchForBookRating(title, authors[0])
 			info = getInfo(soup, "amazon-book-description")
 			book = Book(title, authors, info, cover_url, "NA", rating)
 			return book
@@ -157,16 +155,8 @@ def getAuthors(soup, class_):
 
 def getInfo(soup, class_):
 	info_container = soup.find("div", class_ = class_)
-	info = info_container.find_all("p")
-	unique_paras = []
-	# remove duplicate paragraphs
-	for i in range(len(info)):
-		print(info[i].text)
-		if i > 0:
-			if info[i].text == info[i-1].text:
-				continue
-		unique_paras.append(info[i])
-	return unique_paras
+	info = info_container.find("p")
+	return info
 
 def getISBNRating(soup, class_):
 	buy_div = soup.find("div", class_ = class_)
@@ -186,7 +176,7 @@ def scrapeBookVendor(url):
 	except Exception as e:
 		print(e)
 
-def goodReadsSearchBook(title, author):
+def goodReadsSearchForBookRating(title, author):
 	endpoint = 'https://www.goodreads.com/book/title.xml'
 	params = {'format': 'xml', 'key': Config.API_KEY, \
 		'title': f"{title}", \
@@ -197,7 +187,7 @@ def goodReadsSearchBook(title, author):
 	gr = data_dict['GoodreadsResponse']
 	rating = gr['book']['average_rating']
 	return rating
-	#print(g['book']['average_rating'])
+
 
 if __name__ == "__main__":
 	leaders = ["james altucher"]
