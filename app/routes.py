@@ -28,7 +28,9 @@ def results(leaders):
                     name = name.lower().strip()
                     leaders.append(name)
             bookUrlsWithFreq = Scraper.bookUrlsWithFreq(leaders)
-            bookurls = list(bookUrlsWithFreq.keys())[:5]
-            books = [Scraper.bookFromUrl(bookurl) for bookurl in bookurls if bookurl]
+            bookurls = [bookurl for bookurl, freq in bookUrlsWithFreq]
+            bookurls = bookurls[:5]
+            books = [Scraper.bookFromUrl(bookurl) for bookurl in bookurls]
             return render_template('results.html', form = form, books = books)
     return render_template('results.html', form=form, leaders=None)
+
