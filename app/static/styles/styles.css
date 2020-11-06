@@ -29,6 +29,7 @@ h2{
 input{
     width: 440px;
     height: 50px;
+    font-size: 1.5rem;
     background: #D6E0F0;
     border: 0;
     padding: 0px 10px;
@@ -42,7 +43,11 @@ input{
 input::placeholder{
     font-family: 'Roboto', 'sans-serif';
     font-size: 25px;
-    transform: translateY(5px);
+    transform: translateY(2px);
+}
+
+input:focus, button:focus{
+    outline: none;
 }
 
 .search__button{
@@ -108,18 +113,19 @@ input::placeholder{
     margin: auto;    
 }
 
-.accordion__button:nth-child(even){
-    background-color: #f1f3f8;
+.accordion:nth-child(even) .accordion__button{
+    background-color: #e4ebf5;
 }
 
 .accordion:nth-child(even) .accordion__content{
-    background-color: #d6e0f0;
+    background-color: #b9cae5;
 }
 
-.accordion__button:nth-child(odd){
+.accordion:nth-child(odd) .accordion__button{
     background-color: #d6e0f0;
 }
 
 .accordion:nth-child(odd) .accordion__content{
     background-color: #f1f3f8;
 }
+
