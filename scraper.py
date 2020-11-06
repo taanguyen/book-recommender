@@ -32,9 +32,9 @@ class Scraper:
 			authors = getAuthors(soup, "book-info-intro")
 			# get isbn and rating
 			#isbn, rating = getISBNRating(soup, "buy-book")	
-			rating = goodReadsSearchForBookRating(title, authors[0])
+			#rating = goodReadsSearchForBookRating(title, authors[0])
 			info = getInfo(soup, "amazon-book-description")
-			book = Book(title, authors, info, cover_url, "NA", rating)
+			book = Book(title, authors, info, cover_url, "NA", 0)
 			return book
 
 		except Exception as e: 
@@ -44,16 +44,26 @@ class Scraper:
 	def booksWithFreq(leaders):
 		# get unique book urls with frequency -- multithreading
 		bookUrlsWithFreq = Scraper.bookUrlsWithFreq(leaders)
+		print(bookUrlsWithFreq)
+		urls = [bookurl for bookurl, freq in bookUrlsWithFreq]
+		freqs = [freq for bookurl, freq in bookUrlsWithFreq]
 		with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-			books = executor.map(Scraper.bookFromUrl, bookUrlsWithFreq.keys())
-		bookObjectsWithFreq = list(zip(books, bookUrlsWithFreq.values()))
+			books = executor.map(Scraper.bookFromUrl, urls)
+		bookObjectsWithFreq = list(zip(books, freqs))
 		return bookObjectsWithFreq
-		# books = []
-		# bookUrlsWithFreq = Scraper.bookUrlsWithFreq(leaders)
-		# for url,freq in bookUrlsWithFreq:
-		# 	book = Scraper.bookFromUrl(url)
-		# 	books.append((book, freq))
-		# return books
+	
+	# input: names of leaders in a list 
+	@staticmethod
+	def bookUrlsWithFreq(leaders):
+		uniqueBookUrls = Counter()
+		with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+			bookUrls = executor.map(Scraper.scrapeBookUrlsForLeader, leaders)	
+			with Scraper.lock: 
+				for bookUrl in bookUrls:
+					uniqueBookUrls.update(bookUrl)
+		uniqueUrls = list(uniqueBookUrls.items())
+		uniqueUrls.sort(key=lambda x: -x[1])
+		return uniqueUrls 
 	# input: leader name in format "firstname lastname"
 	@staticmethod
 	def scrapeBookUrlsForLeader(leader):
@@ -101,27 +111,7 @@ class Scraper:
 				print(e)
 				continue
 		return bookUrls
-	# input: names of leaders in a list 
-	@staticmethod
-	def bookUrlsWithFreq(leaders):
-		uniqueBookUrls = Counter()
-		with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-			bookUrls = executor.map(Scraper.scrapeBookUrlsForLeader, leaders)	
-			with Scraper.lock: 
-				for bookUrl in bookUrls:
-					uniqueBookUrls.update(bookUrl)
-		uniqueUrls = list(uniqueBookUrls.items())
-		uniqueUrls.sort(key=lambda x: x[1])
-		return uniqueBookUrls
-
-		# uniqueBookUrls = {}
-		# for leader in leaders:
-		# 	bookUrls = Scraper.scrapeBookUrlsForLeader(leader)
-		# 	for bookUrl in bookUrls:
-		# 		if bookUrl not in uniqueBookUrls:
-		# 			uniqueBookUrls[bookUrl] = 0
-		# 		uniqueBookUrls[bookUrl] += 1 
-		# return uniqueBookUrls
+	
 
 def is_int(s):
 	try: 
