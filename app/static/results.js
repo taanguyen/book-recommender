@@ -1,5 +1,4 @@
-document.querySelectorAll('.accordion__button').forEach(button=>{
-    button.addEventListener('click', () => {
-        button.classList.toggle('accordion__button--active');
-    })
-})
+//toggle book content
+$('.accordion__button').on("click", (event)=>{
+    $(event.target).toggleClass('accordion__button--active');
+});

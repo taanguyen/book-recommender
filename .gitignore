@@ -1,0 +1,11 @@
+.vscode
+goodreads_json
+BookSystem.py
+class_diagram.*
+config.py
+toy_scraper.py
+tests
+venv
+**/__pycache__
+learnings.txt
+app/templates/index_v2.html
