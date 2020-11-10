@@ -1,7 +1,6 @@
 # scraper.py Collects book recommendations from The CEO Library
 import requests, sys, webbrowser, bs4, xmltodict
 from book import Book
-from config import Config
 import concurrent.futures 
 import time
 import threading
@@ -166,23 +165,23 @@ def scrapeBookVendor(url):
 	except Exception as e:
 		print(e)
 
-def goodReadsSearchForBookRating(title, author):
-	endpoint = 'https://www.goodreads.com/book/title.xml'
-	params = {'format': 'xml', 'key': Config.API_KEY, \
-		'title': f"{title}", \
-		'author':f"{author}"}
-	req = requests.get(endpoint, params=params)
-	time.sleep(1)
-	data_dict = xmltodict.parse(req.content)
-	gr = data_dict['GoodreadsResponse']
-	rating = gr['book']['average_rating']
-	return rating
+# def goodReadsSearchForBookRating(title, author):
+# 	endpoint = 'https://www.goodreads.com/book/title.xml'
+# 	params = {'format': 'xml', 'key': Config.API_KEY, \
+# 		'title': f"{title}", \
+# 		'author':f"{author}"}
+# 	req = requests.get(endpoint, params=params)
+# 	time.sleep(1)
+# 	data_dict = xmltodict.parse(req.content)
+# 	gr = data_dict['GoodreadsResponse']
+# 	rating = gr['book']['average_rating']
+# 	return rating
 
 
-if __name__ == "__main__":
-	leaders = ["james altucher"]
-	start_time = time.time()
-	bf = Scraper.booksWithFreq(leaders)
-	duration = time.time() - start_time
-	print(bf)
-	print(f"Downloaded {len([(item, f) for item, f in bf if item])} in {duration} seconds")
+# if __name__ == "__main__":
+# 	leaders = ["james altucher"]
+# 	start_time = time.time()
+# 	bf = Scraper.booksWithFreq(leaders)
+# 	duration = time.time() - start_time
+# 	print(bf)
+# 	print(f"Downloaded {len([(item, f) for item, f in bf if item])} in {duration} seconds")
