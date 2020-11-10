@@ -2,7 +2,6 @@ from flask import render_template, request, redirect, url_for
 from app import app
 from app.forms import InputLeadersForm
 from leader import Leader
-from BookSystem import BookSystem
 from scraper import Scraper
 from book import Book
 
