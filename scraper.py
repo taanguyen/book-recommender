@@ -1,5 +1,5 @@
 # scraper.py Collects book recommendations from The CEO Library
-import requests, sys, webbrowser, bs4, xmltodict, json, re
+import requests, sys, webbrowser, bs4, xmltodict
 from book import Book
 from config import Config
 import concurrent.futures 
