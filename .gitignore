@@ -1,4 +1,5 @@
 .vscode
+.flaskenv
 goodreads_json
 BookSystem.py
 class_diagram.*
