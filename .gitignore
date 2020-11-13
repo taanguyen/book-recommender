@@ -3,7 +3,6 @@
 goodreads_json
 BookSystem.py
 class_diagram.*
-config.py
 toy_scraper.py
 tests
 venv
